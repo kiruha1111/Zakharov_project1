@@ -21,7 +21,7 @@ struct Compressor_station
 };
 
 int main() {
-	string buf;
+	string buf, line;
 	char number;
 	buf.clear();
 	number = *"";
@@ -30,6 +30,7 @@ int main() {
 	new_pipe.name_pipe = "empty";
 	new_compressor.name_station = "empty";
 	ofstream out;// поток для записи
+	ifstream in("download.txt");
 
 	while (true)
 	{
@@ -152,8 +153,16 @@ int main() {
 				}
 			}
 		case '7':
-			cout << "Number of work workshops:" << endl;
-			cin >> new_compressor.work_workshop;
+			if (in.is_open())
+			{
+				while (getline(in, line))
+				{
+					cout << line << endl;
+				}
+			}
+			in.close();
+			cout << "Successful download!" << endl;
+			cout << "Press enter to continue" << endl;
 			break;
 		case '8':
 			exit(0);

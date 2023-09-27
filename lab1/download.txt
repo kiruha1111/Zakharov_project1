@@ -1,0 +1,2 @@
+Pipe: pp1 1 1 1
+Compressor station: st1 1 1 1
