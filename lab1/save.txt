@@ -1,2 +1,0 @@
-Pipe: pipe2 2 2 0
-Compressor station: st1 3 3 3

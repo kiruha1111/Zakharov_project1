@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <string>
 #include <fstream>
 
@@ -20,8 +20,30 @@ struct Compressor_station
 	int performance;
 };
 
+void save(Pipe p, Compressor_station cs)
+{
+	ofstream out("save.txt");
+	out << "Pipe: " << p.name_pipe << " " << p.length << " " << p.diametr << " " << p.under_repair << endl;
+	out << "Compressor station: " << cs.name_station << " " << cs.number_workshop << " " << cs.work_workshop << " " << cs.performance << endl;
+	out.close();
+}
+
+void download()
+{
+	string line;
+	ifstream in("download.txt");
+	if (in.is_open())
+	{
+		while (getline(in, line))
+		{
+			cout << line << endl;
+		}
+	}
+	in.close();
+}
+
 int main() {
-	string buf, line;
+	string buf;
 	char number;
 	buf.clear();
 	number = *"";
@@ -29,8 +51,6 @@ int main() {
 	Compressor_station new_compressor;
 	new_pipe.name_pipe = "empty";
 	new_compressor.name_station = "empty";
-	ofstream out;// поток для записи
-	ifstream in("download.txt");
 
 	while (true)
 	{
@@ -112,55 +132,12 @@ int main() {
 			cin >> new_compressor.work_workshop;
 			break;
 		case '6':
-			out.open("save.txt");// открываем файл для записи
-			if (out.is_open())
-			{
-				if (new_pipe.name_pipe == "empty" && new_compressor.name_station == "empty")
-				{
-					out << "Pipe: no data" << endl;
-					out << "Compressor station: no data" << endl;
-					cout << "Successful save!" << endl;
-					cout << "Press enter to continue" << endl;
-					out.close();
-					break;
-				}
-				else if (new_pipe.name_pipe == "empty")
-				{
-					out << "Pipe: no data" << endl;
-					out << "Compressor station: " << new_compressor.name_station << " " << new_compressor.number_workshop << " " << new_compressor.work_workshop << " " << new_compressor.performance << endl;
-					cout << "Successful save!" << endl;
-					cout << "Press enter to continue" << endl;
-					out.close();
-					break;
-				}
-				else if (new_compressor.name_station == "empty")
-				{
-					out << "Pipe: " << new_pipe.name_pipe << " " << new_pipe.length << " " << new_pipe.diametr << " " << new_pipe.under_repair << endl;
-					out << "Compressor station: no data" << endl;
-					cout << "Successful save!" << endl;
-					cout << "Press enter to continue" << endl;
-					out.close();
-					break;
-				}
-				else
-				{
-					out << "Pipe: " << new_pipe.name_pipe << " " << new_pipe.length << " " << new_pipe.diametr << " " << new_pipe.under_repair << endl;
-					out << "Compressor station: " << new_compressor.name_station << " " << new_compressor.number_workshop << " " << new_compressor.work_workshop << " " << new_compressor.performance << endl;
-					cout << "Successful save!" << endl;
-					cout << "Press enter to continue" << endl;
-					out.close();
-					break;
-				}
-			}
+			save(new_pipe, new_compressor);
+			cout << "Successful save!" << endl;
+			cout << "Press enter to continue" << endl;
+			break;
 		case '7':
-			if (in.is_open())
-			{
-				while (getline(in, line))
-				{
-					cout << line << endl;
-				}
-			}
-			in.close();
+			download();
 			cout << "Successful download!" << endl;
 			cout << "Press enter to continue" << endl;
 			break;
@@ -174,7 +151,7 @@ int main() {
 		buf = "";
 		number = *"";
 		cin.clear();
-		
+
 	}
 	return 0;
 }
