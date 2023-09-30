@@ -1,8 +1,8 @@
-Name: pipe1
+Name pipe: pipe1
 Length: 88.5
 Diametr: 40
 Repair: 1
-Name: station1
+Name station: station1
 Workshops: 50
 Work workshops: 45
 Performance: 87
