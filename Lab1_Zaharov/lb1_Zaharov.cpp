@@ -1,283 +1,268 @@
 ﻿#include <iostream>
 #include <string>
 #include <fstream>
+#include <vector>
+#include <unordered_map>
+#include "Pipe.h"
+#include "Station.h"
+#include "Utilities.h"
+#include "System.h"
+
 
 using namespace std;
 
-struct Pipe
+void EditOnePipe(System& GasSystem)
 {
-	string name_pipe;
-	double length;
-	double diametr;
-	bool under_repair;
-};
+	cout << "Pipes:" << endl;
+	GasSystem.ViewPipes();
+	cout << "Choose edit pipe: ";
+	auto keys = GasSystem.GetIDs(System::pipe);
+	int number = GetCorrectNumber<int>(1, INT_MAX);
+	if (!keys.contains(number)) { cout << "No such ID!" << endl; return; }
+	unordered_set<int> key = { number };
+	GasSystem.EditPipes(key);
+}
 
-struct Compressor_station
-{
-	string name_station;
-	int number_workshop;
-	int work_workshop;
-	int performance;
-};
+void EditOneStation(System& GasSystem) {
+	cout << "Stations:" << endl;
+	GasSystem.ViewStations();
+	cout << "Choose edit station: ";
+	auto keys = GasSystem.GetIDs(System::station);
+	int number = GetCorrectNumber<int>(1, INT_MAX);
+	if (!keys.contains(number)) { cout << "No such ID!" << endl; return; }
+	unordered_set<int> key = { number };
+	GasSystem.EditStations(key);
+}
 
-void save(Pipe p, Compressor_station cs)
-{
-	ofstream out("save.txt");
-	if (p.name_pipe == "empty" && cs.name_station == "empty")
+void Edit_Pipes(System& GasSystem) {
+	if (!GasSystem.HasObject(System::pipe)) { cout << "No pipes!" << endl; return; }
+
+	cout << "1. Edit one pipe" << endl
+		<< "2. Edit by filter" << endl
+		<< "0. Back" << endl;
+
+	switch (GetCorrectNumber(0, 2))
 	{
-		cout << "No data!" << endl;
-		cout << "Press enter to continue" << endl;
+
+	case 1: {EditOnePipe(GasSystem); break; }
+	case 2: {
+		cout << "Choose:" << endl
+			<< "1. Find by name" << endl
+			<< "2. Find by parametr" << endl
+			<< "0. Back" << endl;
+
+		switch (GetCorrectNumber(0, 2))
+		{
+		case 1:
+		{
+			GasSystem.Edit_ByName(System::pipe);
+			break;
+		}
+		case 2:
+		{
+			GasSystem.Edit_ByParametr(System::pipe);
+			break;
+		}
+		case 0: { break; }
+		}
+	case 0: {break; }
 	}
-	else if (p.name_pipe == "empty")
-	{
-		out << "Pipe: no data" << endl;
-		out << "Compressor station: " << cs.name_station << " " << cs.number_workshop << " " << cs.work_workshop << " " << cs.performance << endl;
-		out.close();
-	}
-	else if (cs.name_station == "empty")
-	{
-		out << "Pipe: " << p.name_pipe << " " << p.length << " " << p.diametr << " " << p.under_repair << endl;
-		out << "Compressor station: no data" << endl;
-		out.close();
-	}
-	else
-	{
-		out << "Pipe: " << p.name_pipe << " " << p.length << " " << p.diametr << " " << p.under_repair << endl;
-		out << "Compressor station: " << cs.name_station << " " << cs.number_workshop << " " << cs.work_workshop << " " << cs.performance << endl;
-		out.close();
 	}
 }
 
-string split(string str)
+void Edit_Stations(System& GasSystem)
 {
-	for (int i = 0; i < str.length(); i++)
+	if (!GasSystem.HasObject(System::station)){ cout << "No stations!" << endl; return;}
+
+	cout << "1. Edit one station" << endl
+		<< "2. Edit by filter" << endl
+		<< "0. Back" << endl;
+
+	switch (GetCorrectNumber(0, 2))
 	{
-		if (str[i] == ':')
+	case 1: { EditOneStation(GasSystem); break; }
+
+	case 2: {
+		cout << "Choose:" << endl
+			<< "1. Find by name" << endl
+			<< "2. Find by parametr" << endl
+			<< "0. Back" << endl;
+
+		switch (GetCorrectNumber(0, 2)) {
+		case 1:
 		{
-			str.erase(0, i + 2);
-			return str;
+			GasSystem.Edit_ByName(System::station);
+			break;
 		}
+		case 2:
+		{
+			GasSystem.Edit_ByParametr(System::station);
+			break;
+		}
+		case 0: { break; }
+		}
+		break;
+	}
+	case 0: { break; }
 	}
 }
 
-void download(Pipe& p, Compressor_station& s)
+void DeleteOnePipe(System& GasSystem)
 {
-	ifstream file;
-	string line;
-	file.open("download.txt", ios::in);
-	if (file.is_open())
-	{
-		while (getline(file, line))
-		{
-			if (line.find("Name pipe: ") != string::npos)
-			{
-				p.name_pipe = split(line);
-			}
-			else if (line.find("Length: ") != string::npos)
-			{
-				p.length = stod(split(line));
-			}
-			else if (line.find("Diametr: ") != string::npos)
-			{
-				p.diametr = stod(split(line));
-			}
-			else if (line.find("Repair: ") != string::npos)
-			{
-				p.under_repair  = stoi(split(line));
-			}
-			else if (line.find("Name station: ") != string::npos)
-			{
-				s.name_station = split(line);
-			}
-			else if (line.find("Workshops: ") != string::npos)
-			{
-				s.number_workshop = stoi(split(line));
-			}
-			else if (line.find("Work workshops: ") != string::npos)
-			{
-				s.work_workshop = stoi(split(line));
-			}
-			else if (line.find("Performance: ") != string::npos)
-			{
-				s.performance = stod(split(line));
-			}
-		}
-		file.close();
-		cout << "Successful download!" << endl;
-		cout << "Press enter to continue" << endl;
-	}
-	else
-	{
-		cout << "Error! File not found!" << endl;
-	}
+	cout << "Pipes: " << endl;
+	GasSystem.ViewPipes();
+	cout << "Choose pipe to delete: ";
+	auto keys = GasSystem.GetIDs(System::pipe);
+	int number = GetCorrectNumber<int>(1, INT_MAX);
+	if (!keys.contains(number)) { cout << "No such ID!" << endl; return; }
+	unordered_set<int> key = { number };
+	GasSystem.DeletePipes(key);
 }
 
-int number_or_letter()
-{
-	int number;
-	while (true)
-	{
-		cin >> number;
-		if (cin.fail() || number < 0)
-		{
-			cout << "Please, enter a number above zero!" << endl;
-			cin.clear();
-			cin.ignore(numeric_limits<streamsize>::max(), '\n');
-		}
-		else
-		{
-			return number;
-		}
-	}
-	
+void DeleteOneStation(System& GasSystem) {
+	cout << "Stations: " << endl;
+	GasSystem.ViewStations();
+	cout << "Choose station to delete: ";
+	auto keys = GasSystem.GetIDs(System::station);
+	int number = GetCorrectNumber<int>(1, INT_MAX);
+	if (!keys.contains(number)) { cout << "No such ID!" << endl; return; }
+	unordered_set<int> key = { number };
+	GasSystem.DeleteStations(key);
 }
 
-int proverka(int nw)
+void Delete_Pipes(System& GasSystem)
 {
-	int ww;
-	while (true)
-	{
-		ww = number_or_letter();
-		if (nw < ww)
-		{
-			cout << "Work workshops more than workshops! Try again" << endl;
-			cin.clear();
-			cin.ignore(1000, '\n');
-		}
-		else
-		{
-			return ww;
-		}
+	if (!GasSystem.HasObject(System::pipe)) { cout << "No pipes!" << endl; return; }
 
+	cout << "1. Delete one pipe" << endl
+		<< "2. Delete by filter" << endl
+		<< "0. Back" << endl;
+
+	switch (GetCorrectNumber(0, 2))
+	{
+	case 1: { DeleteOnePipe(GasSystem); break; }
+	case 2: {
+		cout << "Choose:" << endl
+			<< "1. Find by name" << endl
+			<< "2. Find by parametr" << endl
+			<< "0. Back" << endl;
+
+		switch (GetCorrectNumber(0, 2))
+		{
+		case 1:
+		{
+			GasSystem.Delete_ByName(System::pipe);
+			break;
+		}
+		case 2:
+		{
+			GasSystem.Delete_ByParametr(System::pipe);
+			break;
+		}
+		case 0: { break; }
+		}
+		break;
 	}
+	}
+
 }
+
+void Delete_Stations(System& GasSystem)
+{
+	if (!GasSystem.HasObject(System::station)) { cout << "No stations!" << endl; return; }
+
+	cout << "1. Delete one station" << endl
+		<< "2. Delete by filter" << endl
+		<< "0. Back" << endl;
+
+	switch (GetCorrectNumber(0, 2))
+	{
+	case 1: { DeleteOnePipe(GasSystem); break; }
+	case 2: {
+		cout << "Choose:" << endl
+			<< "1. Find by name" << endl
+			<< "2. Find by parametr" << endl
+			<< "0. Back" << endl;
+
+		switch (GetCorrectNumber(0, 2))
+		{
+		case 1: 
+		{ 
+			GasSystem.Delete_ByName(System::station); 
+			break; 
+		}
+		case 2: 
+		{ 
+			GasSystem.Delete_ByParametr(System::station); 
+			break; 
+		}
+		case 0: { break; }
+		}
+		break;
+	}
+	}
+
+}
+
 
 int main() {
-	string buf;
-	char number;
-	buf.clear();
-	number = *"";
-	Pipe new_pipe;
-	Compressor_station new_compressor;
-	new_pipe.name_pipe = "empty";
-	new_compressor.name_station = "empty";
-	ofstream out("save.txt");
-
+	System system;
 	while (true)
 	{
-		cin.ignore(10000, '\n');
-		cout << "1. Add a pipe" << endl
+		cout << "0. Exit" << endl
+			<< "1. Add a pipe" << endl
 			<< "2. Add a compressor station" << endl
 			<< "3. Watch all objects" << endl
-			<< "4. Edit a pipe" << endl
-			<< "5. Edit a compressor station" << endl
-			<< "6. Save" << endl
-			<< "7. Download from file" << endl
-			<< "8. Exit" << endl;
-		getline(cin, buf);
-		if (buf.length() == 1)
-		{
-			number = buf[0];
-		}
-		else
-		{
-			cout << "You enter incorrect data, please try again" << endl;
-			continue;
-		}
+			<< "4. Edit" << endl
+			<< "5. Save" << endl
+			<< "6. Download from file" << endl
+			<< "7. Remove" << endl;
 
-		switch (number)
-		{
-		case '1':
-			cout << "Enter properties of a pipe (name, length, diametr and repair or not (0 or 1)):" << endl;
-			cin >> new_pipe.name_pipe;
-			new_pipe.length = number_or_letter();
-			new_pipe.diametr = number_or_letter();
-			new_pipe.under_repair = number_or_letter();
-			break;
-		case '2':
-			cout << "Enter properties of a compressor station (name, number workshops, number of work workshops, perfomance:" << endl;
-			cin >> new_compressor.name_station;
-			new_compressor.number_workshop = number_or_letter();
-			new_compressor.work_workshop = proverka(new_compressor.number_workshop);
-			new_compressor.performance = number_or_letter();
-			break;
-		case '3':
-			if (new_pipe.name_pipe == "empty" && new_compressor.name_station == "empty")
-			{
-				cout << "All objects:" << endl;
-				cout << "You have not entered the pipe data" << endl;
-				cout << "You have not entered the compressor station data" << endl;
-				cout << "Press enter to continue" << endl;
-				break;
-			}
-			else if (new_pipe.name_pipe == "empty")
-			{
-				cout << "All objects:" << endl;
-				cout << "You have not entered the pipe data" << endl;
-				cout << "Compressor station: " << new_compressor.name_station << " " << new_compressor.number_workshop << " " << new_compressor.work_workshop << " " << new_compressor.performance << endl;
-				cout << "Press enter to continue" << endl;
-				break;
-			}
-			else if (new_compressor.name_station == "empty")
-			{
-				cout << "All objects:" << endl;
-				cout << "Pipe: " << new_pipe.name_pipe << " " << new_pipe.length << " " << new_pipe.diametr << " " << new_pipe.under_repair << endl;
-				cout << "You have not entered the compressor station data" << endl;
-				break;
-			}
-			else
-			{
-				cout << "All objects:" << endl;
-				cout << "Pipe: " << new_pipe.name_pipe << " " << new_pipe.length << " " << new_pipe.diametr << " " << new_pipe.under_repair << endl;
-				cout << "Compressor station: " << new_compressor.name_station << " " << new_compressor.number_workshop << " " << new_compressor.work_workshop << " " << new_compressor.performance << endl;
-				cout << "Press enter to continue" << endl;
-				break;
-			}
-		case '4':
-			if (new_pipe.name_pipe == "empty")
-			{
-				cout << "You don't entered any pipes!" << endl;
-				cout << "Press enter to continue" << endl;
-				break;
-			}
-			else
-			{
-				cout << "Repair or not (0 or 1)):" << endl;
-				cin >> new_pipe.under_repair;
-				break;
-			}		
-		case '5':
-			if (new_compressor.name_station == "empty")
-			{
-				cout << "You don't entered any stations!" << endl;
-				cout << "Press enter to continue" << endl;
-				break;
-			}
-			else
-			{
-				cout << "Number of work workshops:" << endl;
-				cin >> new_compressor.work_workshop;
-				break;
-			}
-			
-		case '6':
-			save(new_pipe, new_compressor);
-			cout << "Press enter to continue" << endl;
-			break;
-		case '7':
-			download(new_pipe, new_compressor);
-			break;
-		case '8':
+		switch (GetCorrectNumber(0, 8)) {
+		case 0:
 			exit(0);
+		case 1:
+			system.add_p();
+			break;
+		case 2:
+			system.add_CS();
+			break;
+		case 3:
+			system.Watch_All(system);
+			break;
+		case 4:
+			cout << "1. Edit pipes" << endl
+				<< "2. Edit stations" << endl
+				<< "0. Back" << endl;
+
+			switch (GetCorrectNumber(0, 2))
+			{
+				case 1: { Edit_Pipes(system); break; }
+				case 2: { Edit_Stations(system); break; }
+				case 0: { break;}
+			}
+			break;
+		case 5:
+			system.Save();
+			break;
+		case 6:
+			system.Download();
+			break;
+		case 7:
+			cout << "1. Remove pipes" << endl
+				<< "2. Remove stations" << endl
+				<< "0. Back" << endl;
+
+			switch (GetCorrectNumber(0, 2))
+			{
+			case 1: { Delete_Pipes(system); break; }
+			case 2: { Delete_Stations(system); break; }
+			case 0: { break; }
+			}
 			break;
 		default:
 			cout << "You enter incorrect data, please try again" << endl;
-			cin.ignore(numeric_limits<streamsize>::max(), '\n');
 		}
-		buf = "";
-		number = *"";
-		cin.clear();
-
 	}
 	return 0;
 }
