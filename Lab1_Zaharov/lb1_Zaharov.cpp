@@ -7,9 +7,12 @@
 #include "Station.h"
 #include "Utilities.h"
 #include "System.h"
+#include <format>
+#include <chrono>
 
 
 using namespace std;
+using namespace chrono;
 
 void EditOnePipe(System& GasSystem)
 {
@@ -207,6 +210,11 @@ void Delete_Stations(System& GasSystem)
 
 int main() {
 	System system;
+	redirect_stream_wrapper cerr_out(cerr);
+	string time = format("{:%d_%m_%Y_%H_%M_%OS}", system_clock::now() + hours(3));
+	ofstream logfile("Logs/log_" + time + ".txt");
+
+	if (logfile) cerr_out.redirect(logfile);
 	while (true)
 	{
 		cout << "0. Exit" << endl
@@ -216,7 +224,8 @@ int main() {
 			<< "4. Edit" << endl
 			<< "5. Save" << endl
 			<< "6. Download from file" << endl
-			<< "7. Remove" << endl;
+			<< "7. Remove" << endl
+			<< "8. Graph" << endl;
 
 		switch (GetCorrectNumber(0, 8)) {
 		case 0:
@@ -257,6 +266,25 @@ int main() {
 			{
 			case 1: { Delete_Pipes(system); break; }
 			case 2: { Delete_Stations(system); break; }
+			case 0: { break; }
+			}
+			break;
+		case 8:
+			cout << "1. View connections" << endl
+				<< "2. Create connection" << endl
+				<< "3. Delete connection" << endl
+				<< "4. Topological sort" << endl
+				<< "5. Shortest path" << endl
+				<< "6. Algorithm Ford-Falkerson" << endl
+				<< "0. Back" << endl;
+
+			switch (GetCorrectNumber(0, 6)) {
+			case 1: { system.ViewConnections(); break; }
+			case 2: { system.CreateConnection(); break; }
+			case 3: { system.DeleteConnection(); break; }
+			case 4: { system.TopologicalSort(); break; }
+			case 5: { system.ShortestPath(); break; }
+			case 6: { system.MaxFlow(); break; }
 			case 0: { break; }
 			}
 			break;

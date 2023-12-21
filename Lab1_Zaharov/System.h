@@ -2,6 +2,7 @@
 #include "Utilities.h"
 #include "Pipe.h"
 #include "Station.h"
+#include "Connections.h"
 
 class System
 {
@@ -24,11 +25,21 @@ public:
 	void DeleteStations(std::unordered_set<int>& IDs);
 	void Delete_ByName(const ObjectType obj);
 	void Delete_ByParametr(const ObjectType obj);
+	void ViewConnections();
+	Connections connections;
+	void CreateConnection();
+	void DeleteConnection();
+	void TopologicalSort();
+	void ShortestPath();
+	void MaxFlow();
+	void CreateStateDiametrPipe(Pipe& pipe, int diameter);
 	
 private:
+	int InputExistIdStation();
 	std::unordered_map<int, Pipe> pipes;
 	std::unordered_map<int, Station> stations;
 	void ViewObjects(std::unordered_set<int> result, const System::ObjectType obj);
 	std::unordered_set<int> GetEditNumbers(std::unordered_set<int>& result, const System::ObjectType obj);
+	std::unordered_set<int> GetFreePipes(const std::unordered_set<int>& IDs);
 };
 

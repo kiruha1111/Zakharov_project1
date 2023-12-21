@@ -3,6 +3,7 @@
 using namespace std;
 
 int Pipe::MaxId = 0;
+vector<int> Pipe::possible_diameters = {500, 700, 1000, 1400};
 
 
 Pipe::Pipe()
@@ -17,7 +18,7 @@ Pipe::Pipe()
 
 void Pipe::add_pipe() {
 	cout << "Enter properties of a pipe (name, length, diametr and repair or not (0 or 1)):" << endl;
-	getline(cin, name);
+	name = input_string();
 	length = GetCorrectNumber(0, 10000);
 	diametr = GetCorrectNumber(0, 10000);
 	under_repair = GetCorrectNumber(0, 10000);
@@ -64,4 +65,25 @@ ifstream& operator >> (ifstream& file, Pipe& pipe) {
 			Pipe::MaxId = pipe.Id;
 	}
 	return file;
+}
+
+void Pipe::WriteInfo_WithStateDiametr(int diameter) {
+	cout << "Enter the name of the pipe:" << endl;
+	name = input_string();
+
+
+	cout << "Enter length of the pipe:" << endl;
+	length = GetCorrectNumber(1.0, 100000000.);
+
+	this->diametr = diameter;
+
+	cout << "Enter condition of the pipe (1 - work, 0 - under repair)" << endl;
+
+	if (GetCorrectNumber(0, 1)) { under_repair = true; }
+	else { under_repair = false; }
+}
+
+double Pipe::GetCapacity() const {
+	double capacity = sqrt(pow(diametr, 5) / length);
+	return under_repair ? capacity : -DBL_MAX;
 }

@@ -129,12 +129,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Connections.cpp" />
+    <ClCompile Include="Graph.cpp" />
     <ClCompile Include="lb1_Zaharov.cpp" />
     <ClCompile Include="Pipe.cpp" />
     <ClCompile Include="Station.cpp" />
     <ClCompile Include="System.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Connections.h" />
+    <ClInclude Include="Graph.h" />
     <ClInclude Include="Pipe.h" />
     <ClInclude Include="Station.h" />
     <ClInclude Include="System.h" />

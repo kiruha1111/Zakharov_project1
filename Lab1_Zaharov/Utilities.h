@@ -66,3 +66,14 @@ std::unordered_set<int> GetKeys(const std::unordered_map<int, T>& container)
         keys.insert(id);
     return keys;
 }
+
+
+inline int SwitchNumber(std::vector<int>& conteiner)
+{
+    for (int i = 0; i < conteiner.size(); i++)
+    {
+        std::cout << i + 1 << ". " << conteiner[i] << std::endl;
+    }
+    int answer = GetCorrectNumber(1, (int)conteiner.size());
+    return conteiner[answer - 1];
+}

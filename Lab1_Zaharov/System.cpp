@@ -1,5 +1,6 @@
 #include "System.h"
 #include "Utilities.h"
+#include "Graph.h"
 #include <algorithm>
 #include <filesystem>
 using namespace std;
@@ -37,6 +38,10 @@ bool CheckByStatus(Pipe& pipe, bool in_repair) {
 
 bool CheckByWorkshop(Station& station, int cent_non_active) {
     return station.GetUnactiveWorkshop() >= cent_non_active;
+}
+
+bool CheckByDiametr(Pipe& pipe, int diameter) {
+    return pipe.GetDiametr() == diameter;
 }
 
 template <typename Element, typename Parametr>
@@ -314,9 +319,10 @@ void System::Save()
 
         ofstream file;
         file.open(name, ios::out);
-        file << pipes.size() << " " << stations.size() << endl;
+        file << pipes.size() << " " << stations.size() << " " << connections.edges.size() << endl;
         for (auto& pipe : pipes) { file << pipe.second; }
         for (auto& station : stations) { file << station.second; };
+        file << connections;
         file.close();
         cout << "Successful save!" << endl;
     }
@@ -333,19 +339,22 @@ void System::Download() {
     for (auto& name : filesystem::directory_iterator(path)) {
         count++;
         names.push_back(name);
-        cout << count << ". " << name << endl;
+        cout << count << ". " << name.path().filename() << endl;
     }
+
     cout << "Choose the file" << endl;
-    int download = GetCorrectNumber(1, count);
+    int save = GetCorrectNumber(1, count);
 
     pipes.clear();
     stations.clear();
+    connections.Clear();
     Pipe pipe;
     Station station;
-    int count_pipes, count_cs;
+    Edge edge;
+    int count_pipes, count_cs, count_connectios;
 
-    file.open(names[download - 1]);
-    file >> count_pipes >> count_cs;
+    file.open(names[save - 1]);
+    file >> count_pipes >> count_cs >> count_connectios;
 
     while (count_pipes--)
     {
@@ -357,6 +366,12 @@ void System::Download() {
         file >> station;
         stations.insert({ station.GetId(), station });
     }
+    while (count_connectios--)
+    {
+        file >> edge;
+        connections.Insert(edge);
+    }
+
     cout << "Successful download!" << endl;
     file.close();
 }
@@ -380,4 +395,138 @@ void System::ViewStations()
         i++;
         element.second.ShowInfo();
     }
+}
+
+//-------------------------For graph------------------//
+void System::ViewConnections() {
+    connections.ViewConnections();
+}
+
+int System::InputExistIdStation() {
+    int id;
+    do {
+        id = GetCorrectNumber(1001, Station::GetMaxId());
+        if (!stations.contains(id)) { cout << "No connections available!" << endl; }
+    } while (!stations.contains(id));
+    return id;
+}
+
+unordered_set<int> System::GetFreePipes(const unordered_set<int>& IDs) {
+    unordered_set<int> free_IDs;
+    for (auto& id : IDs) {
+        if (!connections.edges.contains(id)) {
+            free_IDs.insert(id);
+        }
+    }
+    return free_IDs;
+}
+
+void System::CreateStateDiametrPipe(Pipe& pipe, int diameter) {
+    pipe.WriteInfo_WithStateDiametr(diameter);
+    pipes.insert({ pipe.GetId(), pipe });
+}
+
+void System::CreateConnection() {
+    if (stations.size() < 2) { cout << "There are not enough stations to create a connection!" << endl; return; }
+    ViewStations();
+    cout << "Enter the ID of the starting station: " << endl;
+    int from, to, id;
+    from = InputExistIdStation();
+    cout << "Enter the terminal station ID: " << endl;
+    to = InputExistIdStation();
+
+    if (connections.UncorrectNodes(from, to)) { return; }
+
+    cout << "Enter the diameter of the pipe you want to connect the stations with: " << endl;
+    vector<int> sizes = Pipe::GetSizes();
+    int diameter = SwitchNumber(sizes);
+    unordered_set<int> result = Find_By_Filter<Pipe, int>(pipes, CheckByDiametr, diameter);
+    result = GetFreePipes(result);
+
+    if (!result.size()) {
+        cout << "No pipes with the specified diameter were found. Do you want to create such a pipe?(0 - no(exit), 1 - yes)" << endl;
+        if (!GetCorrectNumber(0, 1)) { return; }
+        else {
+            Pipe pipe;
+            CreateStateDiametrPipe(pipe, diameter);
+            id = pipe.GetId();
+            connections.CreateConnection(from, to, id);
+            return;
+        }
+    }
+
+    ViewObjects(result, pipe);
+    cout << "Select the pipe ID for communication: ";
+    do {
+        id = GetCorrectNumber(1, Pipe::GetMaxId());
+        if (!result.contains(id)) { cout << "There is no such ID among the pipes found! Enter it again." << endl; }
+    } while (!result.contains(id));
+
+    connections.CreateConnection(from, to, id);
+    return;
+}
+
+void System::DeleteConnection() {
+    if (connections.Empty()) {
+        cout << "No connections available!";
+        return;
+    }
+
+    connections.ViewConnections();
+    cout << "Enter the ID of the connection to be deleted: " << endl;
+    int id;
+    do {
+        id = GetCorrectNumber(1, Pipe::GetMaxId());
+        if (!connections.edges.contains(id)) { cout << "There is no such ID among the pipes found! Enter it again." << endl; }
+    } while (!connections.edges.contains(id));
+    connections.DeleteConnection_ByPipeID(id);
+}
+
+
+void System::TopologicalSort() {
+    if (connections.Empty()) { cout << "No connections available!"; return; }
+    Graph graph = Graph(connections.edges, connections.nodes, pipes);
+    vector<int> result = graph.TopologicalSort();
+    if (!result.size()) { cout << "Topological sort: - "; return; }
+    cout << "Topological sorting: ";
+    for (auto& i : result) {
+        cout << i << " ";
+    }
+    cout << endl;
+}
+
+void System::ShortestPath() {
+    if (connections.Empty()) { cout << "No connections available!"; return; }
+    Graph graph = Graph(connections.edges, connections.nodes, pipes);
+
+    connections.ViewConnections();
+    cout << "Enter the starting vertex of the path: " << endl;
+    int StartNode = GetCorrectNumber(1001, Station::GetMaxId());
+
+    cout << "Enter the final vertex of the path: " << endl;
+    int EndNode = GetCorrectNumber(1001, Station::GetMaxId());
+
+    vector<int> result = graph.Metod_Deikstra(StartNode, EndNode);
+    if (!result.size()) { cout << "Path: - "; return; }
+    cout << "Path: ";
+    for (auto& i : result) {
+        cout << i << " -> ";
+    }
+    cout << "end" << endl;
+    cout << "Path length: " << graph.Lenght_ShortestPath(result) << endl;
+}
+
+void System::MaxFlow() {
+    if (connections.Empty()) { cout << "No connections available!"; return; }
+    Graph graph = Graph(connections.edges, connections.nodes, pipes);
+
+    connections.ViewConnections();
+    cout << "Enter the starting vertex of the path: " << endl;
+    int StartNode = GetCorrectNumber(1001, Station::GetMaxId());
+
+    cout << "Enter the final vertex of the path: " << endl;
+    int EndNode = GetCorrectNumber(1001, Station::GetMaxId());
+
+    double result = graph.Ford_Fulkerson(StartNode, EndNode);
+    cout << "Maximum flow: " << result << endl;
 }

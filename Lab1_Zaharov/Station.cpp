@@ -39,7 +39,7 @@ int workshops_check(int nw)
 
 void Station::add_compressor() {
 	cout << "Enter properties of a compressor station (name, number workshops, number of work workshops, perfomance(0-100)):" << endl;
-	getline(cin, name);
+	name = input_string();
 	number_workshop = GetCorrectNumber(0, 10000);
 	work_workshop = workshops_check(number_workshop);
 	performance = GetCorrectNumber(0, 100);
